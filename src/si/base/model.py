@@ -30,7 +30,7 @@ class Model(Estimator, ABC):
         predictions: np.ndarray
             The predicted target values.
         """
-        if not self.is_fitted:
+        if not self.is_fitted():
             raise ValueError('Model needs to be fitted before calling predict()')
         return self._predict(dataset)
 
@@ -68,3 +68,42 @@ class Model(Estimator, ABC):
         """
         self.fit(dataset)
         return self.predict(dataset)
+
+    @abstractmethod
+    def _score(self, dataset, predictions) -> float:
+        """
+        Compute the score of the model on the dataset.
+        Abstract method that needs to be implemented by all subclasses.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to score the model on.
+        predictions: np.ndarray
+            The predicted target values.
+
+        Returns
+        -------
+        score: float
+            The score of the model.
+        """
+
+    def score(self, dataset) -> float:
+        """
+        Compute the score of the model on the dataset.
+        The model needs to be fitted before calling this method.
+
+        Parameters
+        ----------
+        dataset: Dataset
+            The dataset to score the model on.
+
+        Returns
+        -------
+        score: float
+            The score of the model.
+        """
+        if not self.is_fitted():
+            raise ValueError('Model needs to be fitted before calling score()')
+        predictions = self.predict(dataset)
+        return self._score(dataset, predictions)

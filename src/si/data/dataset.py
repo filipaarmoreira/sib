@@ -126,6 +126,70 @@ class Dataset:
         }
         return pd.DataFrame.from_dict(data, orient="index", columns=self.features)
 
+    def dropna(self) -> 'Dataset':
+        """
+        Removes all samples containing at least one null value (NaN).
+        The y vector is updated accordingly.
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset
+        """
+        mask = ~np.isnan(self.X.astype(float)).any(axis=1)
+        self.X = self.X[mask]
+        if self.y is not None:
+            self.y = self.y[mask]
+        return self
+
+    def fillna(self, value: Union[float, str]) -> 'Dataset':
+        """
+        Replaces all null values with a given value or the mean/median of the feature.
+
+        Parameters
+        ----------
+        value: float or str
+            A float, or "mean" or "median"
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset
+        """
+        self.X = self.X.astype(float)
+        if value == "mean":
+            fill = self.get_mean()
+        elif value == "median":
+            fill = self.get_median()
+        elif isinstance(value, (int, float)):
+            fill = np.full(self.X.shape[1], value, dtype=float)
+        else:
+            raise ValueError('value must be a float, "mean" or "median"')
+        rows, cols = np.where(np.isnan(self.X))
+        self.X[rows, cols] = fill[cols]
+        return self
+
+    def remove_by_index(self, index: int) -> 'Dataset':
+        """
+        Removes a sample by its index. The y vector is updated accordingly.
+
+        Parameters
+        ----------
+        index: int
+            The index of the sample to remove
+
+        Returns
+        -------
+        self: Dataset
+            The modified dataset
+        """
+        if index < -len(self.X) or index >= len(self.X):
+            raise IndexError("Index out of bounds")
+        self.X = np.delete(self.X, index, axis=0)
+        if self.y is not None:
+            self.y = np.delete(self.y, index, axis=0)
+        return self
+
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, label: str = None):
         """
@@ -149,7 +213,7 @@ class Dataset:
             X = df.to_numpy()
             y = None
 
-        features = df.columns.tolist()
+        features = df.drop(label, axis=1).columns.tolist() if label else df.columns.tolist()
         return cls(X, y, features=features, label=label)
 
     def to_dataframe(self) -> pd.DataFrame:
