@@ -50,7 +50,7 @@ class KNNClassifier(Model):
         Returns the most common label among the k nearest neighbors of the sample
         """
         distances = self.distance(sample, self.dataset.X)
-        k_nearest = np.argsort(distances)[:self.k]
+        k_nearest = np.argsort(distances)[:self.k] 
         k_labels = self.dataset.y[k_nearest]
         labels, counts = np.unique(k_labels, return_counts=True)
         return labels[np.argmax(counts)]
