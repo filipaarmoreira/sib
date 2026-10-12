@@ -1,7 +1,7 @@
 # Intelligent Systems for Bioinformatics
 
 ## Curricular Unit
-Master in Bioinformatics, University of Minho, 2024-2025.
+Master in Bioinformatics, University of Minho, 2026-2027.
 
 
 ## Description
