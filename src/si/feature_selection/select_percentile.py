@@ -47,8 +47,8 @@ class SelectPercentile(Transformer):
     def _transform(self, dataset: Dataset) -> Dataset:
         """
         Selects the given percentage of features with the highest F values.
-        Ties at the threshold are resolved by order of appearance, so that exactly
-        int(n_features * percentile / 100) features are selected.
+        Features are ranked by F value and ties are resolved by order of appearance,
+        so that exactly int(n_features * percentile / 100) features are selected.
 
         Parameters
         ----------
@@ -61,12 +61,9 @@ class SelectPercentile(Transformer):
         """
         n_features = len(self.F)
         n_select = int(n_features * self.percentile / 100)
-        if n_select == 0:
-            mask = np.zeros(n_features, dtype=bool)
-        else:
-            threshold = np.percentile(self.F, 100 - self.percentile)
-            mask = self.F > threshold
-            ties = np.where(self.F == threshold)[0]
-            mask[ties[:n_select - mask.sum()]] = True
+        # ordenação estável por F decrescente: em caso de empate fica primeiro a feature que aparece primeiro
+        best = np.argsort(-self.F, kind='stable')[:n_select]
+        mask = np.zeros(n_features, dtype=bool)
+        mask[best] = True
         features = np.array(dataset.features)[mask]
         return Dataset(X=dataset.X[:, mask], y=dataset.y, features=features.tolist(), label=dataset.label)

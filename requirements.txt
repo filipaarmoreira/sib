@@ -2,3 +2,6 @@ numpy
 pandas
 scipy
 matplotlib
+torch
+scikit-learn
+datasets

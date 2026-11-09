@@ -5,6 +5,7 @@ import numpy as np
 
 from datasets import DATASETS_PATH
 
+from si.data.dataset import Dataset
 from si.io.csv_file import read_csv
 from si.feature_selection.variance_threshold import VarianceThreshold
 from si.feature_selection.select_k_best import SelectKBest
@@ -51,3 +52,20 @@ class TestFeatureSelection(TestCase):
         F, p = f_classification(self.dataset)
         self.assertEqual(4, len(F))
         self.assertTrue((p < 0.05).all())
+
+
+class TestSelectPercentileCount(TestCase):
+
+    def _selected(self, scores, percentile):
+        scores = np.array(scores, dtype=float)
+        dataset = Dataset(np.arange(len(scores) * 3, dtype=float).reshape(3, -1), np.array([0, 1, 0]))
+        selector = SelectPercentile(score_func=lambda ds: (scores, np.zeros(len(scores))), percentile=percentile)
+        selected = selector.fit(dataset).transform(dataset)
+        return [int(f.split('_')[1]) for f in selected.features]
+
+    def test_slide_example_with_ties(self):
+        self.assertEqual([3, 5, 6, 7], self._selected([1.2, 3.4, 2.1, 5.6, 4.3, 5.6, 7.8, 6.5, 5.6, 3.2], 40))
+
+    def test_exact_number_of_features(self):
+        self.assertEqual([3], self._selected([1, 2, 3, 4], 40))
+        self.assertEqual(3, len(self._selected(list(range(1, 11)), 35)))

@@ -24,7 +24,13 @@ def read_csv(filename: str, sep: str = ',', features: bool = False, label: bool 
     Dataset
         The dataset object
     """
-    data = pd.read_csv(filename, sep=sep)
+    header = 0
+    if not features:
+        # sem nomes de features, uma primeira linha só com números é uma amostra, não um cabeçalho
+        first_row = pd.read_csv(filename, sep=sep, header=None, nrows=1).iloc[0]
+        if pd.to_numeric(first_row, errors='coerce').notna().all():
+            header = None
+    data = pd.read_csv(filename, sep=sep, header=header)
 
     if label:
         X = data.iloc[:, :-1].to_numpy()
@@ -65,4 +71,4 @@ def write_csv(filename: str, dataset: Dataset, sep: str = ',', features: bool = 
     if label:
         data[dataset.label if dataset.label is not None else 'y'] = dataset.y
 
-    data.to_csv(filename, sep=sep, index=False)
+    data.to_csv(filename, sep=sep, index=False, header=features or label)

@@ -1,3 +1,5 @@
+import numpy as np
+from si.data.dataset import Dataset
 import os
 from unittest import TestCase
 
@@ -66,3 +68,17 @@ class TestCSVFile(TestCase):
         self.assertEqual(dataset.has_label(), dataset2.has_label())
         self.assertEqual(dataset.get_classes().tolist(), dataset2.get_classes().tolist())
         os.remove('test.csv')
+
+class TestCSVHeaderlessFile(TestCase):
+
+    def test_numeric_first_row_is_a_sample(self):
+        dataset = read_csv(os.path.join(DATASETS_PATH, 'breast_bin', 'breast-bin.csv'), sep=",", features=False, label=True)
+        self.assertEqual((699, 9), dataset.shape())
+        self.assertEqual(8.0, dataset.X[0, 0])
+
+    def test_write_read_without_features_or_label(self):
+        original = Dataset(np.array([[1.0, 2.0], [3.0, 4.0]]))
+        write_csv(filename='test.csv', dataset=original, sep=",", features=False, label=False)
+        dataset = read_csv(filename='test.csv', sep=",", features=False, label=False)
+        os.remove('test.csv')
+        self.assertEqual((2, 2), dataset.shape())
